@@ -10,6 +10,20 @@ def init_db():
     conn.close()
     return ""
 
+def is_numeric_string(formula):
+    try:
+        # Try converting the string to an integer using int()
+        float_val = float(formula)
+        return True
+    except ValueError:
+        # If ValueError occurs, it means the string cannot be cast to an integer
+        return False
+    
+
+
+
+
+
 # inserts values into the database
 def create(id, formula = 0):
     conn = sqlite3.connect('sheet.db')
@@ -50,7 +64,16 @@ def read(id = 0):
         else:
             # read 1 cell
             cursor.execute("SELECT * FROM cells WHERE id=?", (id,))
-            print(cursor.fetchall())
+            result = cursor.fetchall()
+            formula = result[0][1]
+
+            # check whether cell is value or a reference to other cell(s)
+            if is_numeric_string(formula):
+                # is numeric -> Read value
+                print(formula)
+            else:
+                # is a reference -> Perform operations
+                print('ref')
 
         conn.execute("COMMIT")
     except:
@@ -69,13 +92,7 @@ def update(id, formula):
 def delete(id):
     return ""
 
-n = 55
 
-for i in range(1,101):
-    id = 'A' + str(i)
-    formula = n
-    n += 1
-    create(id, formula)
-
-read()
+create('D5', '33.7')
+read('A1')
 
