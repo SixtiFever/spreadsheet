@@ -2,7 +2,7 @@ import sqlite3
 from flask import g
 import operator
 
-operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': operator.truediv}
+operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': operator.truediv, '*': operator.mul}
 
 # initialises database and creates table
 def init_db():
@@ -15,11 +15,15 @@ def init_db():
 
 def is_numeric_string(formula):
     try:
-        # Try converting the string to an integer using int()
-        float_val = float(formula)
+
+        # attempt to calculate the formula
+        eval(formula)
+
         return True
     except ValueError:
         # If ValueError occurs, it means the string cannot be cast to an integer
+        return False
+    except Exception as e:
         return False
     
 def perform_reference_ops(formula, cursor):
@@ -31,10 +35,9 @@ def perform_reference_ops(formula, cursor):
     # if single reference E.g D4 -> Get and print value
     if len(operands) <= 1:
         res = cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'")
-        val = res.fetchall()[0][1] # obtain calue of cell id
-        print(id + ': '+ val)
+        val = res.fetchall()[0][1] # obtain value
+        return val
     else:
-        print(operands)
         # for each reference in operands, obtain the value and replace in-place
         sum = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'").fetchall()) >= 1 else 0 
         o = 1
@@ -42,13 +45,14 @@ def perform_reference_ops(formula, cursor):
         for i in range(0, len(operands)):
             if r > len(operands):
                         break
-            right_val = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()) >= 1 else 0 
-            print(right_val)
+            right_val = read(operands[r])
+            # right_val = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()) >= 1 else 0 
             op = operator_dict[operands[o]]
             sum = op(sum,right_val)
             o += 2
             r += 2
-        print(sum)
+
+        return sum
     
 
 
@@ -89,14 +93,15 @@ def read(id = 0):
 
     conn = sqlite3.connect('sheet.db')
     cursor = conn.cursor()
-
+    res = []
     try:
         conn.execute("BEGIN")
         
         if id == 0:
             # list all cells
             cursor.execute("SELECT * FROM cells")
-            print(cursor.fetchall())
+            res += cursor.fetchall()
+            return res
 
         else:
             # read 1 cell
@@ -104,29 +109,31 @@ def read(id = 0):
             result = cursor.fetchall()
             # if cell doesn't exist, print 0 and return
             if len(result) <= 0:
-                print(0)
-                return
+                return 404
             
             formula = result[0][1]
 
             # check whether cell is value or a reference to other cell(s)
             if is_numeric_string(formula):
                 # is numeric -> Read value
-                print(formula)
-             
-
+                try:
+                    return eval(formula)
+                except Exception as e:
+                    return e
+                
             else:
                 # is a reference -> perform operations on the formula
-                perform_reference_ops(formula, cursor)
-
-        conn.execute("COMMIT")
-    except:
+                total = perform_reference_ops(formula, cursor)
+                print(total)
+            return 200
+        
+    except Exception as e:
         conn.execute("ROLLBACK")
-        raise
-    finally:
         conn.close()
-
-    return ""
+        return 500
+    finally:
+        conn.execute("COMMIT")
+        conn.close()
 
 
 def update(id, formula):
@@ -135,8 +142,4 @@ def update(id, formula):
 
 def delete(id):
     return ""
-
-
-create('D6', 'A1 + A2 - A3 x A4 / A1')
-read('D6')
 
