@@ -3,12 +3,13 @@ Update
 curl -s -X PUT -d "{\"id\":\"B2\",\"formula\":\"6\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/B2
 curl -s -X PUT -d "{\"id\":\"B3\",\"formula\":\"3 + 4\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/B3
 curl -s -X PUT -d "{\"id\":\"D4\",\"formula\":\"3000\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/D4
+curl -s -X PUT -d "{\"id\":\"D4\",\"formula\":\"B2 * B3\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/D4
+
+curl -s -X PUT -d "{\"id\":\"A9\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/A9
+curl -s -X PUT -d "{\"formula\":\"$FORMULA\"}" -o body -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/A9
+curl -s -X PUT -d "{\"id\":\"B2\",\"formula\":\"3 + 4\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/B3
+
 
 Get
-curl -s -X GET -o body -w "%{http_code}" localhost/cells
-
-ID="D4"
-ANSWER="\"formula\":\"42\""
-RESOURCE=$HOST/cells/$ID
-
+curl -s -X GET -o body -w "%{http_code}" localhost:3000/cells
 curl -s -X GET -o body -w "%{http_code}" localhost:3000/cells/D4

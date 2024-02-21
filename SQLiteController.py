@@ -13,6 +13,20 @@ def init_db():
     conn.close()
     return ""
 
+def clear_table():
+    try:
+
+        conn = sqlite3.connect('sheet.db')
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS cells")
+        conn.commit()
+        print('Table deleted')
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+    return "Deleted table"
+
 def is_numeric_string(formula):
     try:
 
@@ -52,7 +66,13 @@ def perform_reference_ops(formula, cursor):
             o += 2
             r += 2
 
-        return sum
+        # check whether sum is float or integer
+        decimal_part = str(sum).split('.')
+        trailing_val = eval(decimal_part[1])
+        if trailing_val == 0:
+            return decimal_part[0]
+        else:
+            return sum
     
 
 
@@ -96,12 +116,11 @@ def read(id = 0):
     res = []
     try:
         conn.execute("BEGIN")
-        
         if id == 0:
             # list all cells
             cursor.execute("SELECT * FROM cells")
             res += cursor.fetchall()
-            return res
+            return [200, res]
 
         else:
             # read 1 cell
@@ -109,7 +128,7 @@ def read(id = 0):
             result = cursor.fetchall()
             # if cell doesn't exist, print 0 and return
             if len(result) <= 0:
-                return 404
+                return [404]
             
             formula = result[0][1]
 
@@ -124,15 +143,14 @@ def read(id = 0):
             else:
                 # is a reference -> perform operations on the formula
                 total = perform_reference_ops(formula, cursor)
-                print(total)
-            return 200
+            conn.execute("COMMIT")
+            return [200, total]
         
     except Exception as e:
+        print(e)
         conn.execute("ROLLBACK")
-        conn.close()
-        return 500
+        return [500]
     finally:
-        conn.execute("COMMIT")
         conn.close()
 
 
