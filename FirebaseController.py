@@ -132,9 +132,12 @@ def read(id = 0):
     
     if id == 0:
         # reading list
-
-        code = 200
-        return "Read list"
+        cells = db.child('cells').get()
+        ids = []
+        for cell in cells:
+            key = list(cell.val().keys())
+            ids.append(key[0])
+        return ids,200
     
     else:
         # if valid cell id, read cell

@@ -91,7 +91,7 @@ RESOURCE=$HOST/cells/$ID
 STATUS=$(curl -s -X GET -o body -w "%{http_code}" $RESOURCE)
 if [ $STATUS == "200" ]; then
     grep -q $ANSWER body
-    echo $ANSWER
+
     if [ $? -eq 0 ]; then
         echo "Test [6]: OK"; SCORE=$(expr $SCORE + 1)
     else

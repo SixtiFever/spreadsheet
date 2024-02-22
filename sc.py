@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import SQLiteController, argparse, FirebaseController
 
 app = Flask(__name__)
@@ -8,8 +8,6 @@ parser = argparse.ArgumentParser(description='Script to interact with either SQL
 parser.add_argument('-r', '--version', choices=['sqlite', 'firebase'], required=True, help='Specify either sqlite or firebase')
 args = parser.parse_args()
 v = 'f' if args.version == 'firebase' else 's'
-print('NEW')
-print(v)
 
 @app.route("/cells/<id>", methods=['PUT'])
 def create(id):
@@ -46,7 +44,10 @@ def read(id):
         code = r[0]
         val = r[1]
         if code == 200:
-            return "\"formula\":\"{val}\"",val
+            # "formula":"42"
+            res = f"\"formula\":\"{val}\"",code
+            print(res)
+            return f"\"formula\":\"{val}\"",code
         else:
             return "",code
 
@@ -55,8 +56,7 @@ def read(id):
 
     if r[0] == 200:
         t = str(r[1])
-        print('executed')
-        return "\"formula\":\"{t}\"",200
+        return f"\"formula\":\"{t}\"",200
     elif r[0] == 404:
         return "",404
     else:
@@ -64,15 +64,27 @@ def read(id):
 
 @app.route('/cells', methods=['GET'])
 def list():
-    try:
-        r = c.read()
-        if r[0] == 200:
-            # make array of only cell id's
-            ids = [t[0] for t in r[1]]
-            return str(ids),200
-    except Exception as e:
-        print(e)
-        return "",500
+    if v == 's':
+        # sqlite version
+        try:
+            r = c.read()
+            if r[0] == 200:
+                # make array of only cell id's
+                ids = [t[0] for t in r[1]]
+                return str(ids)
+        except Exception as e:
+            print(e)
+            return "",500
+    else:
+        # firebase version
+        try:
+            r = f.read()
+            if r[1] == 200:
+                return str(r[0]),200
+        except Exception as e:
+            print(e)
+            return "",500
+        return ""
 
 
 
