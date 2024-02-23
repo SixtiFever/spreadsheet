@@ -1,6 +1,5 @@
-import sqlite3
+import sqlite3, operator, re
 from flask import g
-import operator
 
 operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': operator.truediv, '*': operator.mul}
 
@@ -8,9 +7,10 @@ operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': o
 def init_db():
     conn = sqlite3.connect('sheet.db')
     cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS cells (id TEXT, formula TEXT DEFAULT '0')")
+    cursor.execute("CREATE TABLE cells (id TEXT, formula TEXT DEFAULT '0')")
     conn.commit()
     conn.close()
+    print('Table cells created')
     return ""
 
 def clear_table():
@@ -44,39 +44,29 @@ def perform_reference_ops(formula, cursor):
     """
     performs operations when a cell references another cell
     """
-    # is a reference -> Perform operations
-    operands = formula.split(' ')
-    # if single reference E.g D4 -> Get and print value
-    if len(operands) <= 1:
-        res = cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'")
-        val = res.fetchall()[0][1] # obtain value
-        return val
-    else:
-        # for each reference in operands, obtain the value and replace in-place
-        sum = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[0] + "'").fetchall()) >= 1 else 0 
-        o = 1
-        r = 2
-        for i in range(0, len(operands)):
-            if r > len(operands):
-                        break
-            right_val = read(operands[r])
-            # right_val = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()) >= 1 else 0 
-            op = operator_dict[operands[o]]
-            sum = op(sum,right_val)
-            o += 2
-            r += 2
+    f = formula
+    pattern = re.compile(r'[*+()-/ " " ]') # extract references
+    split_list = pattern.split(formula)
+    refs = [item for item in split_list if item and not item.isdigit()]
+    print(refs)
+    # replace references with corresponding values
+    for id in refs:
+        val = cursor.execute("SELECT * FROM cells WHERE id='" + id + "'").fetchall()[0][1]
+        res = str(eval(val))
+        f = f.replace(id, res)
+    sum = eval(f)
 
-        # check whether sum is float or integer
-        decimal_part = str(sum).split('.')
+    # check whether sum is float or integer
+    decimal_part = str(sum).split('.')
+    
+    if len(decimal_part) > 1:
         trailing_val = eval(decimal_part[1])
         if trailing_val == 0:
             return decimal_part[0]
         else:
             return sum
-    
-
-
-
+    else:
+        return sum
 
 
 # inserts values into the database
@@ -116,12 +106,14 @@ def read(id = 0):
     res = []
     try:
         conn.execute("BEGIN")
+
+        ### LIST ###
         if id == 0:
-            # list all cells
             cursor.execute("SELECT * FROM cells")
             res += cursor.fetchall()
             return [200, res]
 
+        ### CALCULATE CELL FORMULA ###
         else:
             # read 1 cell
             cursor.execute("SELECT * FROM cells WHERE id=?", (id,))
@@ -129,19 +121,20 @@ def read(id = 0):
             # if cell doesn't exist, print 0 and return
             if len(result) <= 0:
                 return [404]
-            
-            formula = result[0][1]
 
-            # check whether cell is value or a reference to other cell(s)
+            formula = result[0][1]
+            # check whether cell is value or contains at least one reference
             if is_numeric_string(formula):
                 # is numeric -> Read value
                 try:
-                    return eval(formula)
+                    print(eval(formula))
+                    return eval(formula),200
                 except Exception as e:
                     return e
                 
             else:
-                # is a reference -> perform operations on the formula
+                # contains at least 1 reference
+                print('Enter ref ops')
                 total = perform_reference_ops(formula, cursor)
             conn.execute("COMMIT")
             return [200, total]
@@ -160,4 +153,3 @@ def update(id, formula):
 
 def delete(id):
     return ""
-

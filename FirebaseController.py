@@ -6,10 +6,10 @@ db = firebase.database()
 
 operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': operator.truediv, '*': operator.mul}
 
-# create database
-if db.child().get().val() == None:
-    db.child('cells').push({'test':'test'})
-
+def reset_db():
+    db = firebase.database()
+    db.child('cells').remove()
+    db.child('cells').push({'B2':'0'})
 
 def check_if_cell_exists(id):
     db = firebase.database()
@@ -71,22 +71,12 @@ def perform_ref_ops(formula):
                 right_val = eval(operands[r])
             else:
                 right_val = read(operands[r])
-            # right_val = float(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()[0][1]) if len(cursor.execute("SELECT * FROM cells WHERE id='" + operands[r] + "'").fetchall()) >= 1 else 0 
             op = operator_dict[operands[o]]
             sum = op(sum,right_val)
             o += 2
             r += 2
 
         return [200, sum]
-        # check whether sum is float or integer
-        # decimal_part = str(sum).split('.')
-        # trailing_val = eval(decimal_part[1])
-        # if trailing_val == 0:
-        #     return decimal_part[0]
-        # else:
-        #     return sum
-
-#####  HANDLE ALL ERRORS HERE AND RETURN ERRORS + RESPONSE TO SC.PY
 
 
 

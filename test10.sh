@@ -19,7 +19,7 @@ if [ $STATUS == "200" ]; then
     if [ $? -eq 0 ]; then
         echo "Test [1]: OK"; SCORE=$(expr $SCORE + 1)
     else
-        echo "Test [1]: FAIL"
+        echo "Test [1]: FAIL: $STATUS $ANSWER"
     fi
 else
     echo "Test [1]: FAIL (" $STATUS "!= 200 )"
