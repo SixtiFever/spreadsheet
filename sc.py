@@ -75,6 +75,7 @@ def list():
             if r[0] == 200:
                 # make array of only cell id's
                 ids = [t[0] for t in r[1]]
+                print(str(ids))
                 return str(ids),200
         except Exception as e:
             print(e)
@@ -85,11 +86,13 @@ def list():
             r = f.read()
             if r[1] == 200:
                 ids = [t for t in r[0]]
+                if ids[0] == '^^':
+                    ids.pop(0)
                 return str(ids),200
         except Exception as e:
             print(e)
             return "",500
-        return ""
+
 
 
 

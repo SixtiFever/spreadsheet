@@ -48,7 +48,7 @@ def perform_reference_ops(formula, cursor):
     pattern = re.compile(r'[*+()-/ " " ]') # extract references
     split_list = pattern.split(formula)
     refs = [item for item in split_list if item and not item.isdigit()]
-    print(refs)
+
     # replace references with corresponding values
     for id in refs:
         val = cursor.execute("SELECT * FROM cells WHERE id='" + id + "'").fetchall()[0][1]
@@ -58,7 +58,7 @@ def perform_reference_ops(formula, cursor):
 
     # check whether sum is float or integer
     decimal_part = str(sum).split('.')
-    
+
     if len(decimal_part) > 1:
         trailing_val = eval(decimal_part[1])
         if trailing_val == 0:

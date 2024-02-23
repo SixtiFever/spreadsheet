@@ -1,4 +1,4 @@
-import config, pyrebase, operator
+import config, pyrebase, operator, re
 from config import firebase_config
 
 firebase = pyrebase.initialize_app(firebase_config)
@@ -9,7 +9,7 @@ operator_dict = {'+': operator.add, '-': operator.sub, 'x': operator.mul, '/': o
 def reset_db():
     db = firebase.database()
     db.child('cells').remove()
-    db.child('cells').push({'B2':'0'})
+    db.child('cells').push({'^^': '^^'})
 
 def check_if_cell_exists(id):
     db = firebase.database()
@@ -18,6 +18,15 @@ def check_if_cell_exists(id):
         if id in cell.val().keys():
             return True
     return False
+
+def check_if_cells_object_exists():
+    try:
+        db = firebase.database()
+        db.child('cells').get()
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 def get_cell(id):
     db = firebase.database()
@@ -55,28 +64,20 @@ def is_numeric_string(formula):
 
 
 def perform_ref_ops(formula):
-    operands = formula.split(' ')
-    # if single reference E.g D4 -> Get and print value
-    if len(operands) <= 1:
-        return eval(operands[0])
-    else:
-        # for each reference in operands, obtain the value and replace in-place
-        sum = eval(get_cell(operands[0])) if not is_numeric_string(operands[0]) else eval(operands[0])
-        o = 1
-        r = 2
-        for i in range(0, len(operands)):
-            if r > len(operands):
-                        break
-            if is_numeric_string(operands[r]):
-                right_val = eval(operands[r])
-            else:
-                right_val = read(operands[r])
-            op = operator_dict[operands[o]]
-            sum = op(sum,right_val)
-            o += 2
-            r += 2
+    db = firebase.database()
+    f = formula
+    pattern = re.compile(r'[*+()-/ " " ]') # extract references
+    split_list = pattern.split(formula)
+    refs = [item for item in split_list if item and not item.isdigit()]
 
-        return [200, sum]
+    # replace references with corresponding values
+    for id in refs:
+        val = get_cell(id)
+        res = eval(val)
+        print(res)
+        f = f.replace(id, str(res))
+    sum = eval(f)
+    return [200, sum]
 
 
 
