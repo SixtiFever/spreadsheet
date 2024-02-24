@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
 import requests, re
+from config import firebase_url
 
-url = "https://ecm3408-ff937-default-rtdb.europe-west1.firebasedatabase.app"
+url = firebase_url
 
 ### UTIL FUNCTIONS ###
 

@@ -9,5 +9,5 @@ firebase_config = {
     'databaseURL': "https://ecm3408-ff937-default-rtdb.europe-west1.firebasedatabase.app/"
 }
 
-
+firebase_url = firebase_config['databaseURL']
 

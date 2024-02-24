@@ -152,4 +152,23 @@ def update(id, formula):
 
 
 def delete(id):
-    return ""
+
+    conn = sqlite3.connect('sheet.db')
+    cursor = conn.cursor()
+    cell_present = False
+    
+    try:
+        conn.execute("BEGIN")
+        c = cursor.execute("SELECT * FROM cells WHERE id='" + id + "'")
+        if len(c.fetchall()) >= 1:
+            cursor.execute("DELETE FROM cells WHERE id='" + id + "'")
+            cell_present = True
+        conn.execute("COMMIT")
+    except Exception as e:
+        print(e)
+        conn.execute("ROLLBACK")
+        return 404
+    finally:
+        conn.close()
+
+    return 200 if cell_present else 404

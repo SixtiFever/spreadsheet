@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-import SQLiteController, argparse, FBC
+import SQLiteController, argparse, FirebaseController
 
 app = Flask(__name__)
 c = SQLiteController
-f = FBC
+f = FirebaseController
 parser = argparse.ArgumentParser(description='Script to interact with either SQLite or Firebase storage')
 parser.add_argument('-r', '--version', choices=['sqlite', 'firebase'], required=True, help='Specify either sqlite or firebase')
 args = parser.parse_args()
@@ -97,16 +97,24 @@ def list():
             return "",500
 
 
-
-
-@app.route('/cells/delete_table', methods=['GET'])
-def delete_table():
-    c.clear_table()
-
-# @app.route('/cells/create_table', methods=['GET'])
-# def create_table():
-#     c.init_db()
-#     return "Create table"
-
+@app.route('/cells/<id>', methods=['DELETE'])
+def delete(id = 0):
+    if v == 'f':
+        try:
+            r = f.delete(id)
+            print(r)
+            return "",r
+        except Exception as e:
+            print(e)
+            return "",500
+    else:
+        if id == 0:
+            return 404
+        
+        r = c.delete(id)
+        print(r)
+        return "",r
+    
+    
 if __name__ == '__main__':
     app.run(host='localhost', port=3000, debug=True)
