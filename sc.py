@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-import SQLiteController, argparse, FirebaseController
+import SQLiteController, argparse, FirebaseController, FBC
 
 app = Flask(__name__)
 c = SQLiteController
-f = FirebaseController
+f = FBC
 parser = argparse.ArgumentParser(description='Script to interact with either SQLite or Firebase storage')
 parser.add_argument('-r', '--version', choices=['sqlite', 'firebase'], required=True, help='Specify either sqlite or firebase')
 args = parser.parse_args()
@@ -51,6 +51,7 @@ def read(id):
         val = r[1]
         if code == 200:
             # "formula":"42"
+            print(val)
             return f"\"formula\":\"{val}\"",code
         else:
             return "",code
@@ -89,6 +90,8 @@ def list():
                 if ids[0] == '^^':
                     ids.pop(0)
                 return str(ids),200
+            else:
+                return 500
         except Exception as e:
             print(e)
             return "",500
