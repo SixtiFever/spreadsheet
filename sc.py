@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import SQLiteController, argparse, FirebaseController, FBC
+import SQLiteController, argparse, FBC
 
 app = Flask(__name__)
 c = SQLiteController

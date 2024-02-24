@@ -1,5 +1,3 @@
-import pyrebase
-
 firebase_config = {
     'apiKey': "AIzaSyASgnmMFfO1m0B-uhIWME0ORJhtEOMZrHQ",
     'authDomain': "ecm3408-ff937.firebaseapp.com",
