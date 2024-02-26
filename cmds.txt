@@ -13,3 +13,11 @@ curl -s -X PUT -d "{\"id\":\"B2\",\"formula\":\"3 + 4\"}" -H "Content-Type: appl
 Get
 curl -s -X GET -o body -w "%{http_code}" localhost:3000/cells
 curl -s -X GET -o body -w "%{http_code}" localhost:3000/cells/D4
+
+
+curl -s -X PUT -d "{\"id\":\"G1\",\"formula\":\"G2 + G3 + 10\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/G1
+curl -s -X PUT -d "{\"id\":\"G2\",\"formula\":\"10 + 10\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/G2
+curl -s -X PUT -d "{\"id\":\"G3\",\"formula\":\"2 + (3 * G4)\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/G3
+curl -s -X PUT -d "{\"id\":\"G4\",\"formula\":\"2\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/G4
+
+10 + 10 + 2 + (3 * 2) + 10 = 38 
