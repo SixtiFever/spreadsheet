@@ -82,22 +82,6 @@ def perform_formula_update(id, formula):
                 return 500
 
 
-    
-def perform_ref_ops(formula):
-    db = requests.get(f"{url}/cells.json").json()
-    f = formula
-    pattern = re.compile(r'[*+()-/ " " ]') # extract references
-    split_list = pattern.split(formula)
-    refs = [item for item in split_list if item and not item.isdigit()]
-    # replace references with corresponding values
-    for id in refs:
-        val = get_formula_by_id(id)
-        res = eval(val)
-        f = f.replace(id, str(res))
-    sum = eval(f)
-    return [200, sum]
-
-
 
 ## CRUD OPERATIONS ###
 
@@ -132,50 +116,6 @@ def create(id = 0, formula = 0):
         print(res)
     return code
 
-
-
-
-# read
-# def read(id = 0):
-#     """
-#     reads from the firebase database
-#     """
-
-#     data = requests.get(f"{url}/cells.json").json()
-
-#     # if cell id is invalid
-#     if is_numeric_string(id):
-#         print('invalid id')
-#         return [404,0]
-
-#     # print list if not id is given
-#     if id == 0:
-#         ids = []
-#         for record in data.values():
-#             lid = list(record.keys())[0]
-#             ids.append(lid)
-#         return ids,200
-#     else:
-
-#         for record in data.values():
-#             lid = list(record.keys())[0]
-#             if lid == id:
-#                 # perform calculation
-#                 formula = list(record.values())[0]
-
-#                 # if cell value can be calculated directly i.e is numeric
-#                 if is_numeric_string(formula):
-#                     s = eval(formula)
-#                     print(s)
-#                     return [200, s]
-                
-#                 # if cell value contains at least 1 reference
-#                 else:
-#                     s = perform_ref_ops(formula)
-#                     return [200, s[1]]
-            
-#         print('ID not found')
-#         return [404, 0]
     
 
 def read(id = 0):
@@ -225,14 +165,15 @@ def read(id = 0):
                         split_list = pattern.split(formula)
                         refs = [item for item in split_list if item and not item.isdigit()]
                         for id in refs:
-                            val = "(" + get_formula_by_id(id) + ")"
-                            f = f.replace(id, val)
+                            id_formula = get_formula_by_id(id)
+                            val = id_formula if not is_numeric_string(id_formula) else eval(id_formula)
+                            f = f.replace(id, str(val))
                         return recurse_formulas(f)
 
                 s = recurse_formulas(string_formula)  # calculate formulas recursively
                 result = remove_trailing_zeros(s)  # remove unecessary trailing 0s
+                print(result)
                 return [200, result]
-                # deal with trailing 0's ???
 
             
         print('ID not found')
@@ -270,4 +211,4 @@ def delete(id):
 # create('Z5', 'Z6')
 # create('Z6', '0.75')
 
-# read('G1')
+read('G1')
