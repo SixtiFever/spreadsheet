@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import SQLiteController, argparse, FirebaseController
 
+# pull in environment vars
+
 app = Flask(__name__)
 c = SQLiteController
 f = FirebaseController
@@ -29,18 +31,15 @@ def create(id):
             # execute firebase
             r = f.create(id, formula)
             return "",r
+        
         else:
-            c.create(id, formula)
-            is_numeric = c.is_numeric_string(formula)
-            if is_numeric:
-                # create cell
-                return "",201
-            else:
-                # is a reference to other cells
-                return "",204
+            code = c.create(id, formula)
+            return "",code
         
     except KeyError:
         return "",400
+    except Exception:
+        return "",500
     
 
 @app.route('/cells/<id>', methods=['GET'])
@@ -50,8 +49,6 @@ def read(id):
         code = r[0]
         val = r[1]
         if code == 200:
-            # "formula":"42"
-            print(val)
             return f"\"formula\":\"{val}\"",code
         else:
             return "",code

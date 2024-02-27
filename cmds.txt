@@ -6,7 +6,7 @@ curl -s -X PUT -d "{\"id\":\"D4\",\"formula\":\"3000\"}" -H "Content-Type: appli
 curl -s -X PUT -d "{\"id\":\"D4\",\"formula\":\"B2 * B3\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/D4
 
 curl -s -X PUT -d "{\"id\":\"A9\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/A9
-curl -s -X PUT -d "{\"formula\":\"$FORMULA\"}" -o body -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/A9
+curl -s -X PUT -d "{\"formula\":\"4 + 7\"}" -o body -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/A9
 curl -s -X PUT -d "{\"id\":\"B2\",\"formula\":\"3 + 4\"}" -H "Content-Type: application/json" -w "%{http_code}" localhost:3000/cells/B3
 
 

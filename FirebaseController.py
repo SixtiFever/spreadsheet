@@ -1,8 +1,6 @@
-from flask import Flask, request, jsonify
-import requests, re
-from config import firebase_url
+import requests, re, os
 
-url = firebase_url
+url = os.environ['FBASE']
 
 ### UTIL FUNCTIONS ###
 
@@ -51,7 +49,9 @@ def check_cell_exists(id):
     return False
 
 def remove_trailing_zeros(sum):
-     # check whether sum is float or integer
+    """
+    safeguarding against unecessary trailing zeros
+    """
     
     decimal_part = str(sum).split('.')  # create list about the decimal
 
@@ -75,7 +75,6 @@ def perform_formula_update(id, formula):
             data = {id: formula}
             res = requests.patch(path, json=data)
             if res.status_code == 200:
-                print('successful update')
                 return 200
             else:
                 print('update error')
@@ -87,33 +86,23 @@ def perform_formula_update(id, formula):
 
 # create
 def create(id = 0, formula = 0):
-    # res = requests.post(f"{url}/cells.json", json={'Test': 'Test'})
 
     code = 0
 
     # check if request is valid is valid
     if is_numeric_string(id) or formula == 0 or id == 0:
-        print('Invalid post request')
+        print('Bad Request')
         return 400,""
-    
-    # check if formula is numeric or a reference
-    is_numeric = is_numeric_string(formula)
-    if is_numeric:
-        code = 201
-    else:
-        # if formula is a reference
-        code = 204
     
     cell_exists = check_cell_exists(id)
     data = {id : formula}
     if cell_exists:
-        print('Cell exists. Performing update.')
         res = perform_formula_update(id, formula)
+        code = 204
         print(res)
     else:
-        print('Creating new cell.')
         res = requests.post(f"{url}/cells.json", json=data)
-        print(res)
+        code = 201
     return code
 
     
@@ -154,12 +143,11 @@ def read(id = 0):
 
                     # base case -> When formulais calculatable i.e contains no references
                     if is_numeric_string(formula):
-                        print('Final formula: ' + formula)
                         s = eval(formula)
                         return float(s)
                     
                     else:
-                        # keep resursing
+                        # keep rec ursing
                         f = formula
                         pattern = re.compile(r'[*+()-/ " " ]') # extract references
                         split_list = pattern.split(formula)
@@ -172,7 +160,6 @@ def read(id = 0):
 
                 s = recurse_formulas(string_formula)  # calculate formulas recursively
                 result = remove_trailing_zeros(s)  # remove unecessary trailing 0s
-                print(result)
                 return [200, result]
 
             
@@ -194,21 +181,3 @@ def delete(id):
             else:
                 return 500
     return 404
-
-# create('B1', '3 * 8')
-# create('B2', 'A1 / 4 + B1')
-# create('A1', '5 * 7')
-# create('D4', 'A1 * B1 - B2')
-# create('G1', 'G2 + G3 + 10 + D4 + Z1')
-# create('G2', '10 + 10')
-# create('G3', '2 + (3 * G4)')
-# create('G4', '2')
-# create('G1', 'G2 + G3 + 10 + D4 + Z1')
-# create('Z1', 'Z2')
-# create('Z2', 'Z3')
-# create('Z3', 'Z4')
-# create('Z4', 'Z5')
-# create('Z5', 'Z6')
-# create('Z6', '0.75')
-
-read('G1')
