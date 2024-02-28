@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import SQLiteController, argparse, FirebaseController
 
-# pull in environment vars
+### Setup ###
 
 app = Flask(__name__)
 c = SQLiteController
@@ -16,6 +16,9 @@ if v == 's':
     c.init_db()
 else:
     f.reset_db()
+
+
+### Views ###
 
 @app.route("/cells/<id>", methods=['PUT'])
 def create(id):

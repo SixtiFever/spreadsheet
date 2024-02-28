@@ -15,6 +15,10 @@ def reset_db():
 
 
 def is_numeric_string(formula):
+    """
+    determines whether the input string formula is directly 
+    calculatable i.e contains a reference or not
+    """
     try:
 
         # attempt to calculate the formula
@@ -30,6 +34,9 @@ def is_numeric_string(formula):
         return False
     
 def get_formula_by_id(id):
+    """
+    returns the contents of the cell with the given id
+    """
     data = requests.get(f"{url}/cells.json").json()
     for record in data.values():
         lid = list(record.keys())[0]
@@ -41,6 +48,9 @@ def get_formula_by_id(id):
     return '0'
 
 def check_cell_exists(id):
+    """
+    checks whether a cell with the given id exists
+    """
     data = requests.get(f"{url}/cells.json").json()
     for record in data.values():
         lid = list(record.keys())[0]
@@ -50,9 +60,9 @@ def check_cell_exists(id):
 
 def remove_trailing_zeros(sum):
     """
-    safeguarding against unecessary trailing zeros
+    function to safeguard against trailing zeros, 
+    just in case in correct format is returned.
     """
-    
     decimal_part = str(sum).split('.')  # create list about the decimal
 
     if len(decimal_part) > 1:
@@ -66,6 +76,9 @@ def remove_trailing_zeros(sum):
 
 
 def perform_formula_update(id, formula):
+    """
+    updated the formula of the given cell
+    """
     data = requests.get(f"{url}/cells.json").json()
     path = f"{url}/cells/"
     for k,v in data.items():
@@ -86,32 +99,45 @@ def perform_formula_update(id, formula):
 
 # create
 def create(id = 0, formula = 0):
+    """
+    Creates or updates the spreadsheet with the given id and formula.
+    If either cell id or formula is invalid or not enteres, code 400 is returned
+    representing a bad request
+    """
 
     code = 0
 
-    # check if request is valid is valid
+    # check if request is valid
     if is_numeric_string(id) or formula == 0 or id == 0:
         print('Bad Request')
         return 400,""
     
+    # check whether cell already exists to establish whether to perform
+    # and update or create a new cell
     cell_exists = check_cell_exists(id)
     data = {id : formula}
+
     if cell_exists:
+        # perform update and assign 204
         res = perform_formula_update(id, formula)
         code = 204
         print(res)
     else:
+        # create new cell and assign 201
         res = requests.post(f"{url}/cells.json", json=data)
         code = 201
+
     return code
 
     
 
 def read(id = 0):
     """
-    reads from the firebase database
+    reads the cell of the given id from the firebase database. 
+    If no id is given, reads the entire contents of the spreadsheet.
     """
 
+    # get all database contents
     data = requests.get(f"{url}/cells.json").json()
 
     # if cell id is invalid
@@ -138,24 +164,29 @@ def read(id = 0):
 
                 def recurse_formulas(formula):
                     """
-                    deal with references recursively
+                    calculate formula with references via recursion
                     """
 
-                    # base case -> When formulais calculatable i.e contains no references
+                    # base case -> when input formula is calculatable i.e contains no references
                     if is_numeric_string(formula):
                         s = eval(formula)
                         return float(s)
                     
                     else:
-                        # keep rec ursing
+                        # recursve
                         f = formula
-                        pattern = re.compile(r'[*+()-/ " " ]') # extract references
-                        split_list = pattern.split(formula)
-                        refs = [item for item in split_list if item and not item.isdigit()]
+                        pattern = re.compile(r'[*+()-/ " " ]')
+                        split_list = pattern.split(formula) # split formula by operators to extract references
+                        refs = [item for item in split_list if item and not item.isdigit()] # assign list of formula references
+
+                        # iterate references, replacing the ref ID in the original string with 
+                        # the content of the references which is either calcultable via eval() or is
+                        # another reference
                         for id in refs:
                             id_formula = get_formula_by_id(id)
                             val = id_formula if not is_numeric_string(id_formula) else eval(id_formula)
                             f = f.replace(id, str(val))
+                        # pass the updated formula as the argument of the recursion    
                         return recurse_formulas(f)
 
                 s = recurse_formulas(string_formula)  # calculate formulas recursively
@@ -169,6 +200,9 @@ def read(id = 0):
 
 # delete
 def delete(id):
+    """
+    deletes the cell of the given id if present
+    """
     data = requests.get(f"{url}/cells.json").json()
     path = f"{url}/cells/"
     for k,v in data.items():
