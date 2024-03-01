@@ -150,7 +150,7 @@ def read(id = 0):
                         for id in refs:
                             cursor.execute("SELECT * FROM cells WHERE id=?", (id,))
                             result = cursor.fetchall()
-                            formula = result[0][1]
+                            formula = '0' if len(result) <= 0 else result[0][1] # 
                             val = formula if not is_numeric_string(formula) else eval(formula)
                             f = f.replace(id, str(val))
                         return recurse_formulas(f)
@@ -190,3 +190,9 @@ def delete(id):
 
     return 200 if cell_present else 404
 
+
+create('N1', 'N2 * N3 + 8')
+r = read('N1')
+print(r)
+r = read('N2')
+print(r)

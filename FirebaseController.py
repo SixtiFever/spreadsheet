@@ -215,3 +215,12 @@ def delete(id):
             else:
                 return 500
     return 404
+
+
+
+
+create('N1', 'N2 * N3 + 8')
+r = read('N1')
+print(r)
+r = read('N2')
+print(r)
