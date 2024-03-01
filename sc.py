@@ -76,7 +76,6 @@ def list():
             if r[0] == 200:
                 # make array of only cell id's
                 ids = [t[0] for t in r[1]]
-                print(str(ids))
                 return str(ids),200
         except Exception as e:
             print(e)
@@ -102,7 +101,6 @@ def delete(id = 0):
     if v == 'f':
         try:
             r = f.delete(id)
-            print(r)
             return "",r
         except Exception as e:
             print(e)

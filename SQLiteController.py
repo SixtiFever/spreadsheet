@@ -9,7 +9,6 @@ def init_db():
     cursor.execute("CREATE TABLE cells (id TEXT, formula TEXT DEFAULT '0')")
     conn.commit()
     conn.close()
-    print('Table cells created')
     return ""
 
 def clear_table():
@@ -19,7 +18,6 @@ def clear_table():
         cursor = conn.cursor()
         cursor.execute("DROP TABLE IF EXISTS cells")
         conn.commit()
-        print('Table deleted')
     except Exception as e:
         print(e)
     finally:
@@ -74,12 +72,10 @@ def create(id, formula = 0):
         cursor.execute("SELECT * FROM cells WHERE id=?", (id,))
         if len(cursor.fetchall()) <= 0:
             # insert new cell
-            print('Inserted new cell ' + id)
             cursor.execute("INSERT INTO cells VALUES (?, ?)", (id, formula))
             code = 201
         else:
             # update cell
-            print('Updated cell ' + id)
             cursor.execute("UPDATE cells SET formula='"+formula+"' WHERE id='" + id + "'")
             code = 204
         conn.execute("COMMIT")
@@ -94,6 +90,10 @@ def create(id, formula = 0):
 
 
 def read(id = 0):
+    """
+    reads from the spreadsheet. Returns 404 is cell id doesn't exist.
+    200 if successfull. 500 if there is an internal service error.
+    """
 
     conn = sqlite3.connect('sheet.db')
     cursor = conn.cursor()
@@ -121,7 +121,6 @@ def read(id = 0):
             if is_numeric_string(formula):
                 # is numeric -> Read value
                 try:
-                    print(eval(formula))
                     return eval(formula),200
                 except Exception as e:
                     return e
@@ -137,7 +136,6 @@ def read(id = 0):
 
                     # base case -> When formulais calculatable i.e contains no references
                     if is_numeric_string(formula):
-                        print('Final formula: ' + formula)
                         s = eval(formula)
                         return float(s)
                     
@@ -154,9 +152,10 @@ def read(id = 0):
                             val = formula if not is_numeric_string(formula) else eval(formula)
                             f = f.replace(id, str(val))
                         return recurse_formulas(f)
+                    
                 s = recurse_formulas(string_formula)
+
                 result = remove_trailing_zeros(s)  
-                print(result)
                 conn.execute("COMMIT")
                 return [200, result]
         
@@ -189,10 +188,3 @@ def delete(id):
         conn.close()
 
     return 200 if cell_present else 404
-
-
-create('N1', 'N2 * N3 + 8')
-r = read('N1')
-print(r)
-r = read('N2')
-print(r)

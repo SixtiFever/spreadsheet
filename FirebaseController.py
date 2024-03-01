@@ -90,7 +90,6 @@ def perform_formula_update(id, formula):
             if res.status_code == 200:
                 return 200
             else:
-                print('update error')
                 return 500
 
 
@@ -109,7 +108,6 @@ def create(id = 0, formula = 0):
 
     # check if request is valid
     if is_numeric_string(id) or formula == 0 or id == 0:
-        print('Bad Request')
         return 400,""
     
     # check whether cell already exists to establish whether to perform
@@ -121,7 +119,6 @@ def create(id = 0, formula = 0):
         # perform update and assign 204
         res = perform_formula_update(id, formula)
         code = 204
-        print(res)
     else:
         # create new cell and assign 201
         res = requests.post(f"{url}/cells.json", json=data)
@@ -142,7 +139,6 @@ def read(id = 0):
 
     # if cell id is invalid
     if is_numeric_string(id):
-        print('invalid id')
         return [404,0]
 
     # if no id is passed to function, return list
@@ -194,7 +190,6 @@ def read(id = 0):
                 return [200, result]
 
             
-        print('ID not found')
         return [404, 0]
     
 
@@ -215,12 +210,3 @@ def delete(id):
             else:
                 return 500
     return 404
-
-
-
-
-create('N1', 'N2 * N3 + 8')
-r = read('N1')
-print(r)
-r = read('N2')
-print(r)
